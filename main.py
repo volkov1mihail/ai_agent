@@ -1,23 +1,24 @@
 import os, argparse
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai.types.chat.chat_completion import ChatCompletion
 
-def generate_content(client: OpenAI, messages: dict[str, str]) -> object:
+def generate_content(client: OpenAI, messages: dict[str, str]) -> ChatCompletion:
     return client.chat.completions.create(
         model="openrouter/free",
         messages=messages,
     )
 
-def get_consumed_tokens(response: object) -> tuple[int, int]:
+def get_consumed_tokens(response: ChatCompletion) -> tuple[int, int]:
     if not response.usage:
         raise Exception("no usage property in response")
     return response.usage.prompt_tokens, response.usage.completion_tokens
 
-def consumed_tokens_string(response: object) -> str:
+def consumed_tokens_string(response: ChatCompletion) -> str:
     prompt_tokens, completion_tokens = get_consumed_tokens(response)
     return f"Prompt tokens: {prompt_tokens}" + "\n" + f"Response tokens: {completion_tokens}" 
 
-def generate_output(response: object, args) -> str:
+def generate_output(response: ChatCompletion, args) -> str:
     result = ""
     if args.verbose:
         result += f"User prompt: {args.user_prompt}" + "\n"
