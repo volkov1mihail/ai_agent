@@ -4,7 +4,7 @@ from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from prompts import system_prompt
 from config import AGENT_TEMPERATURE
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 def generate_content(client: OpenAI, messages: dict[str, str]) -> ChatCompletion:
     return client.chat.completions.create(
@@ -33,8 +33,10 @@ def generate_output(response: ChatCompletion, args) -> str:
     message = response.choices[0].message
     if message.tool_calls:
         for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            result += f"Calling function: {tool_call.function.name}({function_args})"
+            return_message = call_function(tool_call, args.verbose)
+            if not return_message["content"]:
+                raise Exception("Error: Tool call returned with empty content")
+            result += return_message["content"]
     else:
         result += message.content
     return result

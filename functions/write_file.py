@@ -1,6 +1,28 @@
 import os
 from functions.get_filepaths import get_filepaths, FunctionPurpose
 
+schema_write_file = {
+    "type": "function",
+    "function": {
+        "name": "write_file",
+        "description": "Opens and writes the given content to the file with a given file_path, relative to the working directory",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "A path to the file to write to. The path is relative to the working directory",
+                },
+                "content": {
+                    "type": "string",
+                    "description": "The content to write to the chosen file",
+                }
+            },
+        },
+        "required": ["file_path", "content"],
+    },
+}
+
 def write_file(working_directory: str, file_path: str, content: str) -> str:
     status_message, working_dir_abs, file_path_abs = get_filepaths(working_directory, file_path, FunctionPurpose.WRITE_TO_FILE)
     if "Error" in status_message:
