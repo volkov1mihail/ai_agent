@@ -1,12 +1,17 @@
-import os, argparse
+import os, argparse, json
 from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
+from prompts import system_prompt
+from config import AGENT_TEMPERATURE
+from call_function import available_functions
 
 def generate_content(client: OpenAI, messages: dict[str, str]) -> ChatCompletion:
     return client.chat.completions.create(
         model="openrouter/free",
         messages=messages,
+        temperature=AGENT_TEMPERATURE,
+        tools=available_functions,
     )
 
 def get_consumed_tokens(response: ChatCompletion) -> tuple[int, int]:
@@ -23,11 +28,20 @@ def generate_output(response: ChatCompletion, args) -> str:
     if args.verbose:
         result += f"User prompt: {args.user_prompt}" + "\n"
         result += consumed_tokens_string(response) + "\n"
-    
-    return result + "Response:\n" + response.choices[0].message.content
+    result += "Response:\n"
+
+    message = response.choices[0].message
+    if message.tool_calls:
+        for tool_call in message.tool_calls:
+            function_args = json.loads(tool_call.function.arguments or "{}")
+            result += f"Calling function: {tool_call.function.name}({function_args})"
+    else:
+        result += message.content
+    return result
 
 
 def main():
+    global system_prompt
     load_dotenv()
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
@@ -44,6 +58,7 @@ def main():
     args = parser.parse_args()
 
     messages = [
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": args.user_prompt},
     ]
 
