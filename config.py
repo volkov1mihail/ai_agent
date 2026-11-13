@@ -1,1 +1,2 @@
 MAX_CHARS = 10000
+RUN_PYTHON_FILE_TIMEOUT = 30 # in seconds

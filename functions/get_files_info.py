@@ -23,7 +23,8 @@ def generate_file_info(filepath: str) -> str:
     return f"- {file_name}: file_size={file_size} bytes, is_dir={is_dir}"
 
 def get_files_info(working_directory: str, directory: str = ".") -> str:
-    status_message, working_dir_abs, target_dir_abs = get_filepaths(working_directory, directory, FunctionPurpose.LIST_DICTIONARY)
+    status_message, working_dir_abs, target_dir_abs = get_filepaths(
+        working_directory, directory, FunctionPurpose.LIST_DICTIONARY)
     if "Error" in status_message:
         return status_message
 

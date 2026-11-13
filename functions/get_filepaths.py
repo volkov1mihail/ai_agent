@@ -5,6 +5,7 @@ class FunctionPurpose(Enum):
     LIST_DICTIONARY = 1
     READ_FILE = 2
     WRITE_TO_FILE = 3
+    EXECUTE_FILE = 4
 
 def get_filepaths(working_directory: str, target_path: str, purpose: FunctionPurpose) -> tuple[str, str, str]:
     try:
@@ -33,12 +34,16 @@ def get_filepaths(working_directory: str, target_path: str, purpose: FunctionPur
                 if os.path.isdir(target_path_abs):
                     return (f'Error: Cannot write to "{target_path}" as it is a directory',
                             "", "")
+            case FunctionPurpose.EXECUTE_FILE:
+                if not os.path.isfile(target_path_abs):
+                    return (f'Error: "{target_path}" does not exist or is not a regular file',
+                            "", "")
     except Exception as e:
         match purpose:
             case FunctionPurpose.LIST_DICTIONARY:
                 return (f'Error: Could not verify if "{target_path}" is a directory\n' + str(e),
                         "", "")
-            case FunctionPurpose.READ_FILE:
+            case FunctionPurpose.READ_FILE | FunctionPurpose.EXECUTE_FILE:
                 return (f'Error: Could not verify if "{target_path}" is a file\n' + str(e),
                         "", "")
             case FunctionPurpose.WRITE_TO_FILE:
@@ -57,6 +62,9 @@ def get_filepaths(working_directory: str, target_path: str, purpose: FunctionPur
                             "", "")
                 case FunctionPurpose.WRITE_TO_FILE:
                     return (f'Error: Cannot write to "{target_path}" as it is outside the permitted working directory',
+                            "", "")
+                case FunctionPurpose.EXECUTE_FILE:
+                    return (f'Error: Cannot execute "{target_path}" as it is outside the permitted working directory',
                             "", "")
     except Exception as e:
         return (f'Error: Could not calculate the common path of "{working_directory}" and "{target_path}"\n' + str(e),

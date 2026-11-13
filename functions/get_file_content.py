@@ -2,7 +2,8 @@ from functions.get_filepaths import get_filepaths, FunctionPurpose
 from config import MAX_CHARS
 
 def get_file_content(working_directory: str, file_path: str) -> str:
-    status_message, working_dir_abs, file_path_abs = get_filepaths(working_directory, file_path, FunctionPurpose.READ_FILE)
+    status_message, working_dir_abs, file_path_abs = get_filepaths(
+        working_directory, file_path, FunctionPurpose.READ_FILE)
     if "Error" in status_message:
         return status_message
 
