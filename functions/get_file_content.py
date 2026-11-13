@@ -1,15 +1,15 @@
-from functions.get_filepaths import get_filepaths
+from functions.get_filepaths import get_filepaths, FunctionPurpose
 from config import MAX_CHARS
 
 def get_file_content(working_directory: str, file_path: str) -> str:
-    status_message, working_dir_abs, file_path_abs = get_filepaths(working_directory, file_path, is_dir=False)
+    status_message, working_dir_abs, file_path_abs = get_filepaths(working_directory, file_path, FunctionPurpose.READ_FILE)
     if "Error" in status_message:
         return status_message
 
     output: str = status_message + "\n"
     try:
-        f = open(file_path_abs, "r")
-        output += f.read(MAX_CHARS)
+        with open(file_path_abs, "r") as f:
+            output += f.read(MAX_CHARS)
     except Exception as e:
         return output + f'Error: could not open or read the "{file_path}"\n' + str(e)
 
