@@ -1,9 +1,9 @@
-import os, argparse, json
+import os, argparse, sys
 from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from prompts import system_prompt
-from config import AGENT_TEMPERATURE
+from config import AGENT_TEMPERATURE, MAX_AGENT_LOOPS
 from call_function import available_functions, call_function
 
 def generate_content(client: OpenAI, messages: dict[str, str]) -> ChatCompletion:
@@ -23,7 +23,7 @@ def consumed_tokens_string(response: ChatCompletion) -> str:
     prompt_tokens, completion_tokens = get_consumed_tokens(response)
     return f"Prompt tokens: {prompt_tokens}" + "\n" + f"Response tokens: {completion_tokens}" 
 
-def generate_output(response: ChatCompletion, args) -> str:
+def generate_output(response: ChatCompletion, args, messages: list = []) -> str:
     result = ""
     if args.verbose:
         result += f"User prompt: {args.user_prompt}" + "\n"
@@ -31,14 +31,22 @@ def generate_output(response: ChatCompletion, args) -> str:
     result += "Response:\n"
 
     message = response.choices[0].message
+    if not message.content:
+        message.content = ""
+
     if message.tool_calls:
         for tool_call in message.tool_calls:
             return_message = call_function(tool_call, args.verbose)
             if not return_message["content"]:
                 raise Exception("Error: Tool call returned with empty content")
+
+            message.content += (f"tool_call_id: {return_message["tool_call_id"]}\n" + 
+                                f"content: {return_message["content"]}\n")
             result += return_message["content"]
     else:
         result += message.content
+    
+    messages.append(message)
     return result
 
 
@@ -64,9 +72,15 @@ def main():
         {"role": "user", "content": args.user_prompt},
     ]
 
-    response = generate_content(client, messages)
-    response_text = generate_output(response, args)
-    print(response_text)
+    for i in range(MAX_AGENT_LOOPS):
+        response = generate_content(client, messages)
+        response_text = generate_output(response, args, messages)
+        print(response_text)
+        if not messages[-1].tool_calls:
+            break
+        elif i == MAX_AGENT_LOOPS:
+            print("Error: The maximum number of agent calls has been reached without completing the task. Aborting.")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

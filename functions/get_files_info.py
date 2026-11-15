@@ -27,7 +27,7 @@ schema_get_files_info = {
     "type": "function",
     "function": {
         "name": "get_files_info",
-        "description": "Lists files in a specified directory relative to the working directory, providing file size and directory status",
+        "description": "Lists contents of a specified directory relative to the working directory. If a listed item has 'is_dir=True', it is a child directory and can be listed by a corresponding function call",
         "parameters": {
             "type": "object",
             "properties": {
